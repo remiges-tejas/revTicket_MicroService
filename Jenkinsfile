@@ -69,9 +69,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
                             sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                            dir('Microservices-Backend/eureka-server') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${EUREKA_IMAGE}:${BUILD_TAG} -t ${EUREKA_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f eureka-server/Dockerfile -t ${EUREKA_IMAGE}:${BUILD_TAG} -t ${EUREKA_IMAGE}:latest --push ."
                         } else {
                             bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
                             dir('Microservices-Backend/eureka-server') {
@@ -88,9 +86,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/api-gateway') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${GATEWAY_IMAGE}:${BUILD_TAG} -t ${GATEWAY_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f api-gateway/Dockerfile -t ${GATEWAY_IMAGE}:${BUILD_TAG} -t ${GATEWAY_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/api-gateway') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${GATEWAY_IMAGE}:${BUILD_TAG} -t ${GATEWAY_IMAGE}:latest --push ."
@@ -106,9 +102,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/user-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${USER_IMAGE}:${BUILD_TAG} -t ${USER_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f user-service/Dockerfile -t ${USER_IMAGE}:${BUILD_TAG} -t ${USER_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/user-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${USER_IMAGE}:${BUILD_TAG} -t ${USER_IMAGE}:latest --push ."
@@ -124,9 +118,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/movie-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${MOVIE_IMAGE}:${BUILD_TAG} -t ${MOVIE_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f movie-service/Dockerfile -t ${MOVIE_IMAGE}:${BUILD_TAG} -t ${MOVIE_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/movie-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${MOVIE_IMAGE}:${BUILD_TAG} -t ${MOVIE_IMAGE}:latest --push ."
@@ -142,9 +134,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/theater-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${THEATER_IMAGE}:${BUILD_TAG} -t ${THEATER_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f theater-service/Dockerfile -t ${THEATER_IMAGE}:${BUILD_TAG} -t ${THEATER_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/theater-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${THEATER_IMAGE}:${BUILD_TAG} -t ${THEATER_IMAGE}:latest --push ."
@@ -160,9 +150,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/showtime-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${SHOWTIME_IMAGE}:${BUILD_TAG} -t ${SHOWTIME_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f showtime-service/Dockerfile -t ${SHOWTIME_IMAGE}:${BUILD_TAG} -t ${SHOWTIME_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/showtime-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${SHOWTIME_IMAGE}:${BUILD_TAG} -t ${SHOWTIME_IMAGE}:latest --push ."
@@ -178,9 +166,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/booking-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${BOOKING_IMAGE}:${BUILD_TAG} -t ${BOOKING_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f booking-service/Dockerfile -t ${BOOKING_IMAGE}:${BUILD_TAG} -t ${BOOKING_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/booking-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${BOOKING_IMAGE}:${BUILD_TAG} -t ${BOOKING_IMAGE}:latest --push ."
@@ -196,9 +182,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/payment-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${PAYMENT_IMAGE}:${BUILD_TAG} -t ${PAYMENT_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f payment-service/Dockerfile -t ${PAYMENT_IMAGE}:${BUILD_TAG} -t ${PAYMENT_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/payment-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${PAYMENT_IMAGE}:${BUILD_TAG} -t ${PAYMENT_IMAGE}:latest --push ."
@@ -214,9 +198,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/review-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${REVIEW_IMAGE}:${BUILD_TAG} -t ${REVIEW_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f review-service/Dockerfile -t ${REVIEW_IMAGE}:${BUILD_TAG} -t ${REVIEW_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/review-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${REVIEW_IMAGE}:${BUILD_TAG} -t ${REVIEW_IMAGE}:latest --push ."
@@ -232,9 +214,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/search-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${SEARCH_IMAGE}:${BUILD_TAG} -t ${SEARCH_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f search-service/Dockerfile -t ${SEARCH_IMAGE}:${BUILD_TAG} -t ${SEARCH_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/search-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${SEARCH_IMAGE}:${BUILD_TAG} -t ${SEARCH_IMAGE}:latest --push ."
@@ -250,9 +230,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/notification-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${NOTIFICATION_IMAGE}:${BUILD_TAG} -t ${NOTIFICATION_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f notification-service/Dockerfile -t ${NOTIFICATION_IMAGE}:${BUILD_TAG} -t ${NOTIFICATION_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/notification-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${NOTIFICATION_IMAGE}:${BUILD_TAG} -t ${NOTIFICATION_IMAGE}:latest --push ."
@@ -268,9 +246,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/settings-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${SETTINGS_IMAGE}:${BUILD_TAG} -t ${SETTINGS_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f settings-service/Dockerfile -t ${SETTINGS_IMAGE}:${BUILD_TAG} -t ${SETTINGS_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/settings-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${SETTINGS_IMAGE}:${BUILD_TAG} -t ${SETTINGS_IMAGE}:latest --push ."
@@ -286,9 +262,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         if (isUnix()) {
-                            dir('Microservices-Backend/dashboard-service') {
-                                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${DASHBOARD_IMAGE}:${BUILD_TAG} -t ${DASHBOARD_IMAGE}:latest --push ."
-                            }
+                            sh "cd Microservices-Backend && docker buildx build --platform linux/amd64,linux/arm64 -f dashboard-service/Dockerfile -t ${DASHBOARD_IMAGE}:${BUILD_TAG} -t ${DASHBOARD_IMAGE}:latest --push ."
                         } else {
                             dir('Microservices-Backend/dashboard-service') {
                                 bat "docker buildx build --platform linux/amd64,linux/arm64 -t ${DASHBOARD_IMAGE}:${BUILD_TAG} -t ${DASHBOARD_IMAGE}:latest --push ."
