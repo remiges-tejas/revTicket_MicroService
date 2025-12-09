@@ -1,0 +1,233 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 30s
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+            methods: GET
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # User Service Routes
+        - id: user-service-auth
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
+        
+        - id: user-service-admin
+          uri: lb://user-service
+          predicates:
+            - Path=/api/admin/users/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        # Movie Service Routes
+        - id: movie-service-admin
+          uri: lb://movie-service
+          predicates:
+            - Path=/api/admin/movies/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: movie-service
+          uri: lb://movie-service
+          predicates:
+            - Path=/api/movies/**,/api/languages/**
+        
+        # Theater Service Routes
+        - id: theater-service-admin
+          uri: lb://theater-service
+          predicates:
+            - Path=/api/admin/theaters/**,/api/admin/theatres/**,/api/admin/screens/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: theater-service
+          uri: lb://theater-service
+          predicates:
+            - Path=/api/theaters/**,/api/theatres/**,/api/screens/**
+        
+        # Showtime Service Routes
+        - id: showtime-service-admin
+          uri: lb://showtime-service
+          predicates:
+            - Path=/api/admin/showtimes/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: showtime-service
+          uri: lb://showtime-service
+          predicates:
+            - Path=/api/showtimes/**
+        
+        # Booking Service Routes
+        - id: booking-service-seats-public
+          uri: lb://booking-service
+          predicates:
+            - Path=/api/seats/showtime/**
+            - Method=GET
+        
+        - id: booking-service
+          uri: lb://booking-service
+          predicates:
+            - Path=/api/bookings/**,/api/seats/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        # Payment Service Routes
+        - id: payment-service-razorpay-health
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/razorpay/health
+        
+        - id: payment-service-razorpay-create
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/razorpay/create-order
+        
+        - id: payment-service-razorpay-verify
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/razorpay/verify-payment
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: payment-service-razorpay-payment-failed
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/razorpay/payment-failed
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: payment-service-razorpay
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/razorpay/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        # Review Service Routes
+        - id: review-service-admin
+          uri: lb://review-service
+          predicates:
+            - Path=/api/admin/reviews/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: review-service-public
+          uri: lb://review-service
+          predicates:
+            - Path=/api/reviews/movie/**
+        
+        - id: review-service
+          uri: lb://review-service
+          predicates:
+            - Path=/api/reviews/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        # Search Service Routes
+        - id: search-service
+          uri: lb://search-service
+          predicates:
+            - Path=/api/search/**
+        
+        # Notification Service Routes
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**,/ws/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        # Settings Service Routes
+        - id: settings-service-admin
+          uri: lb://settings-service
+          predicates:
+            - Path=/api/admin/settings/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: settings-service
+          uri: lb://settings-service
+          predicates:
+            - Path=/api/settings/**
+        
+        # Dashboard Service Routes
+        - id: dashboard-service-reports
+          uri: lb://dashboard-service
+          predicates:
+            - Path=/api/admin/reports/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: dashboard-service
+          uri: lb://dashboard-service
+          predicates:
+            - Path=/api/admin/dashboard/**,/api/dashboard/**
+          filters:
+            - JwtAuthenticationFilter
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: ${JWT_SECRET:RevTicketSecretKeyForJWTTokenGeneration2024SecureAndLongEnough}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+jwt:
+  secret: ${JWT_SECRET:RevTicketSecretKeyForJWTTokenGeneration2024SecureAndLongEnough}
+  expiration: 86400000

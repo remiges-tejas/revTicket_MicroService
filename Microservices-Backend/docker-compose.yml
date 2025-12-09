@@ -1,0 +1,416 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: revticket-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Admin123
+      MYSQL_DATABASE: revticket_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: revticket-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Eureka Server (Service Discovery)
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      JWT_SECRET: RevTicketSecretKeyForJWTTokenGeneration2024SecureAndLongEnough
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin123
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      JWT_SECRET: RevTicketSecretKeyForJWTTokenGeneration2024SecureAndLongEnough
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: ${MAIL_USERNAME:-nanijohn460@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-femrwvgygpiurafn}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Movie Service
+  movie-service:
+    build:
+      context: ./movie-service
+      dockerfile: Dockerfile
+    container_name: movie-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/movie_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin123
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Theater Service
+  theater-service:
+    build:
+      context: ./theater-service
+      dockerfile: Dockerfile
+    container_name: theater-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/theater_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin123
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Showtime Service
+  showtime-service:
+    build:
+      context: ./showtime-service
+      dockerfile: Dockerfile
+    container_name: showtime-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/showtime_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin123
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      MOVIE_SERVICE_URL: http://movie-service:8082
+      THEATER_SERVICE_URL: http://theater-service:8083
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      movie-service:
+        condition: service_healthy
+      theater-service:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Booking Service
+  booking-service:
+    build:
+      context: ./booking-service
+      dockerfile: Dockerfile
+    container_name: booking-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/booking_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin123
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      USER_SERVICE_URL: http://user-service:8081
+      SHOWTIME_SERVICE_URL: http://showtime-service:8084
+      PAYMENT_SERVICE_URL: http://payment-service:8086
+      NOTIFICATION_SERVICE_URL: http://notification-service:8089
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      showtime-service:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/payment_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin123
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-rzp_test_Ro278zkDXduScL}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-PBoZU26dOzGM9ABFwq4Ljc2p}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Review Service
+  review-service:
+    build:
+      context: ./review-service
+      dockerfile: Dockerfile
+    container_name: review-service
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/review_service_db
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      BOOKING_SERVICE_URL: http://booking-service:8085
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Search Service
+  search-service:
+    build:
+      context: ./search-service
+      dockerfile: Dockerfile
+    container_name: search-service
+    ports:
+      - "8088:8088"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/search_service_db
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      MOVIE_SERVICE_URL: http://movie-service:8082
+      THEATER_SERVICE_URL: http://theater-service:8083
+      SHOWTIME_SERVICE_URL: http://showtime-service:8084
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8089:8089"
+    environment:
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: ${MAIL_USERNAME:-nanijohn460@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-femrwvgygpiurafn}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Settings Service
+  settings-service:
+    build:
+      context: ./settings-service
+      dockerfile: Dockerfile
+    container_name: settings-service
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/settings_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin123
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Dashboard Service
+  dashboard-service:
+    build:
+      context: ./dashboard-service
+      dockerfile: Dockerfile
+    container_name: dashboard-service
+    ports:
+      - "8091:8091"
+    environment:
+      EUREKA_SERVER: http://eureka-server:8761/eureka/
+      USER_SERVICE_URL: http://user-service:8081
+      MOVIE_SERVICE_URL: http://movie-service:8082
+      THEATER_SERVICE_URL: http://theater-service:8083
+      SHOWTIME_SERVICE_URL: http://showtime-service:8084
+      BOOKING_SERVICE_URL: http://booking-service:8085
+      PAYMENT_SERVICE_URL: http://payment-service:8086
+      REVIEW_SERVICE_URL: http://review-service:8087
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+    networks:
+      - revticket-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend (Angular)
+  frontend:
+    build:
+      context: ../Frontend
+      dockerfile: Dockerfile
+    container_name: revticket-frontend
+    ports:
+      - "4200:80"
+    environment:
+      API_URL: http://localhost:8080/api
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - revticket-network
+
+networks:
+  revticket-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  mongo_data:
